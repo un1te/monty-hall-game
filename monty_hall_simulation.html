@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Парадокс Монті Голла / Monty Hall Paradox</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            user-select: none;
+        }
+
+        /* 3D Door Flip & Perspective Styles */
+        .perspective-1000 {
+            perspective: 1000px;
+        }
+
+        .door-card {
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .door-card.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .door-front, .door-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            -webkit-backface-visibility: hidden;
+            border-radius: 1rem;
+        }
+
+        .door-back {
+            transform: rotateY(180deg);
+        }
+
+        /* Selection Glows */
+        .door-selected {
+            ring: 4px;
+            ring-color: #3b82f6;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
+        }
+
+        .door-host-revealed {
+            opacity: 0.85;
+        }
+
+        /* Call-to-action pulse animation */
+        @keyframes subtle-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.03); }
+        }
+        .animate-pulse-subtle {
+            animation: subtle-pulse 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between selection:bg-indigo-500 selection:text-white">
+
+    <header class="border-b border-slate-800 bg-slate-950/60 backdrop-blur-md sticky top-0 z-50">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="bg-indigo-600/30 text-indigo-400 p-2.5 rounded-xl border border-indigo-500/30">
+                    <i class="fa-solid fa-door-open text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold leading-tight bg-gradient-to-r from-indigo-400 to-purple-400 bg-clip-text text-transparent">
+                        Monty Hall Paradox
+                    </h1>
+                    <p class="text-xs text-slate-400 hidden sm:block" id="sub-title">Інтерактивна симуляція теорії ймовірностей</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- Language Switcher -->
+                <button id="lang-btn" onclick="toggleLanguage()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-semibold transition flex items-center gap-2">
+                    <i class="fa-solid fa-globe text-indigo-400"></i>
+                    <span id="lang-label">English</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-6 flex-grow w-full flex flex-col gap-6">
+
+        <!-- Instruction Banner / Status Box -->
+        <div id="status-banner" class="bg-slate-800/80 border border-slate-700 rounded-2xl p-5 text-center shadow-xl transition-all duration-300">
+            <span id="step-badge" class="inline-block px-3 py-1 bg-indigo-500/20 text-indigo-300 rounded-full text-xs font-bold uppercase tracking-wider mb-2 border border-indigo-500/30">
+                Крок 1 з 3
+            </span>
+            <h2 id="status-title" class="text-xl sm:text-2xl font-bold text-white mb-1">Оберіть одні з трьох дверей!</h2>
+            <p id="status-desc" class="text-slate-400 text-sm max-w-xl mx-auto">
+                За одними дверми ховається нове авто 🚗, а за двома іншими — кози 🐐.
+            </p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3 sm:gap-6 my-2 perspective-1000">
+            
+            <!-- Door 1 -->
+            <div id="door-0" onclick="handleDoorClick(0)" class="cursor-pointer group flex flex-col items-center">
+                <div id="door-card-0" class="door-card w-full h-56 sm:h-72 rounded-2xl shadow-2xl">
+                    <div class="door-front bg-gradient-to-br from-amber-700 via-amber-800 to-amber-950 border-2 border-amber-600/50 flex flex-col justify-between p-4 shadow-inner group-hover:border-amber-400 transition">
+                        <div class="flex justify-between items-center text-amber-200/60 font-mono text-sm font-bold">
+                            <span>#1</span>
+                            <i class="fa-solid fa-lock text-xs"></i>
+                        </div>
+                        <div class="flex flex-col items-center justify-center gap-2 my-auto">
+                            <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-950/60 border border-amber-600/40 flex items-center justify-center text-amber-300 text-2xl sm:text-3xl shadow-md">
+                                🚪
+                            </div>
+                            <span class="text-xs font-bold tracking-widest uppercase text-amber-200/80">Двері 1</span>
+                        </div>
+                        <div class="w-3 h-3 rounded-full bg-amber-400 shadow-md border border-amber-200 self-end"></div>
+                    </div>
+                    <div id="door-back-0" class="door-back bg-slate-800 border-2 border-slate-600 flex flex-col items-center justify-center p-4">
+                        <div id="door-prize-0" class="text-5xl sm:text-7xl mb-2 animate-bounce">🐐</div>
+                        <span id="door-label-0" class="text-xs font-bold text-slate-300 uppercase tracking-wider">Коза</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Door 2 -->
+            <div id="door-1" onclick="handleDoorClick(1)" class="cursor-pointer group flex flex-col items-center">
+                <div id="door-card-1" class="door-card w-full h-56 sm:h-72 rounded-2xl shadow-2xl">
+                    <div class="door-front bg-gradient-to-br from-amber-700 via-amber-800 to-amber-950 border-2 border-amber-600/50 flex flex-col justify-between p-4 shadow-inner group-hover:border-amber-400 transition">
+                        <div class="flex justify-between items-center text-amber-200/60 font-mono text-sm font-bold">
+                            <span>#2</span>
+                            <i class="fa-solid fa-lock text-xs"></i>
+                        </div>
+                        <div class="flex flex-col items-center justify-center gap-2 my-auto">
+                            <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-950/60 border border-amber-600/40 flex items-center justify-center text-amber-300 text-2xl sm:text-3xl shadow-md">
+                                🚪
+                            </div>
+                            <span class="text-xs font-bold tracking-widest uppercase text-amber-200/80">Двері 2</span>
+                        </div>
+                        <div class="w-3 h-3 rounded-full bg-amber-400 shadow-md border border-amber-200 self-end"></div>
+                    </div>
+                    <div id="door-back-1" class="door-back bg-slate-800 border-2 border-slate-600 flex flex-col items-center justify-center p-4">
+                        <div id="door-prize-1" class="text-5xl sm:text-7xl mb-2 animate-bounce">🚗</div>
+                        <span id="door-label-1" class="text-xs font-bold text-slate-300 uppercase tracking-wider">Авто</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Door 3 -->
+            <div id="door-2" onclick="handleDoorClick(2)" class="cursor-pointer group flex flex-col items-center">
+                <div id="door-card-2" class="door-card w-full h-56 sm:h-72 rounded-2xl shadow-2xl">
+                    <div class="door-front bg-gradient-to-br from-amber-700 via-amber-800 to-amber-950 border-2 border-amber-600/50 flex flex-col justify-between p-4 shadow-inner group-hover:border-amber-400 transition">
+                        <div class="flex justify-between items-center text-amber-200/60 font-mono text-sm font-bold">
+                            <span>#3</span>
+                            <i class="fa-solid fa-lock text-xs"></i>
+                        </div>
+                        <div class="flex flex-col items-center justify-center gap-2 my-auto">
+                            <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-amber-950/60 border border-amber-600/40 flex items-center justify-center text-amber-300 text-2xl sm:text-3xl shadow-md">
+                                🚪
+                            </div>
+                            <span class="text-xs font-bold tracking-widest uppercase text-amber-200/80">Двері 3</span>
+                        </div>
+                        <div class="w-3 h-3 rounded-full bg-amber-400 shadow-md border border-amber-200 self-end"></div>
+                    </div>
+                    <div id="door-back-2" class="door-back bg-slate-800 border-2 border-slate-600 flex flex-col items-center justify-center p-4">
+                        <div id="door-prize-2" class="text-5xl sm:text-7xl mb-2 animate-bounce">🐐</div>
+                        <span id="door-label-2" class="text-xs font-bold text-slate-300 uppercase tracking-wider">Коза</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div id="action-panel" class="min-h-[64px] flex flex-wrap items-center justify-center gap-3 my-2">
+            <!-- Dynamic decision buttons will be rendered here via JS -->
+        </div>
+
+        <section class="bg-slate-800/50 border border-slate-700/80 rounded-2xl p-5 shadow-lg">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-700/60">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-chart-pie text-indigo-400 text-lg"></i>
+                    <h3 id="stats-heading" class="font-bold text-slate-200">Статистика та Аналітика</h3>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="runAutoSimulation()" class="px-3 me-1 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold rounded-lg shadow-md transition flex items-center gap-2">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span id="btn-auto-sim">Автосимуляція (1000 ігор)</span>
+                    </button>
+                    <button onclick="resetStats()" class="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-semibold rounded-lg transition" title="Скинути статистику">
+                        <i class="fa-solid fa-rotate-left"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                
+                <!-- Switched Strategy Box -->
+                <div class="bg-slate-900/80 border border-emerald-500/30 rounded-xl p-4 flex flex-col justify-between">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block" id="stat-title-switch">Стратегія: Зміна Вибору</span>
+                            <p class="text-xs text-slate-400" id="stat-desc-switch">Гравець постійно змінює двері (~66.7% виграшу)</p>
+                        </div>
+                        <span class="px-2 py-1 bg-emerald-500/10 text-emerald-300 text-xs font-mono font-bold rounded border border-emerald-500/20" id="stat-winrate-switch">0.0%</span>
+                    </div>
+
+                    <div class="space-y-2 mt-2">
+                        <div class="flex justify-between text-xs text-slate-300">
+                            <span id="lbl-games-1">Ігор:</span>
+                            <span id="stat-games-switch" class="font-mono font-bold">0</span>
+                        </div>
+                        <div class="flex justify-between text-xs text-slate-300">
+                            <span id="lbl-wins-1">Виграшів:</span>
+                            <span id="stat-wins-switch" class="font-mono font-bold text-emerald-400">0</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700">
+                            <div id="bar-switch" class="bg-emerald-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kept Strategy Box -->
+                <div class="bg-slate-900/80 border border-amber-500/30 rounded-xl p-4 flex flex-col justify-between">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block" id="stat-title-keep">Стратегія: Без Зміни (1-й Вибір)</span>
+                            <p class="text-xs text-slate-400" id="stat-desc-keep">Залишити початкові двері (~33.3% виграшу)</p>
+                        </div>
+                        <span class="px-2 py-1 bg-amber-500/10 text-amber-300 text-xs font-mono font-bold rounded border border-amber-500/20" id="stat-winrate-keep">0.0%</span>
+                    </div>
+
+                    <div class="space-y-2 mt-2">
+                        <div class="flex justify-between text-xs text-slate-300">
+                            <span id="lbl-games-2">Ігор:</span>
+                            <span id="stat-games-keep" class="font-mono font-bold">0</span>
+                        </div>
+                        <div class="flex justify-between text-xs text-slate-300">
+                            <span id="lbl-wins-2">Виграшів:</span>
+                            <span id="stat-wins-keep" class="font-mono font-bold text-amber-400">0</span>
+                        </div>
+                        <div class="w-full bg-slate-800 rounded-full h-2.5 overflow-hidden border border-slate-700">
+                            <div id="bar-keep" class="bg-amber-500 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="mt-3 text-center">
+                <span class="text-xs text-slate-500" id="total-games-lbl">Всього проведено раундів: <strong id="total-games-count" class="text-slate-300">0</strong></span>
+            </div>
+        </section>
+
+        <section class="bg-slate-950 border border-slate-800 rounded-2xl p-5 text-sm text-slate-400">
+            <details class="group">
+                <summary class="font-semibold text-slate-300 cursor-pointer flex items-center justify-between list-none">
+                    <span class="flex items-center gap-2">
+                        <i class="fa-solid fa-book-open text-indigo-400"></i>
+                        <span id="readme-title">Інструкція з запуску та описом парадоксу (README)</span>
+                    </span>
+                    <i class="fa-solid fa-chevron-down group-open:rotate-180 transition-transform"></i>
+                </summary>
+                
+                <div class="mt-4 pt-4 border-t border-slate-800 space-y-4 text-xs sm:text-sm leading-relaxed">
+                    <div>
+                        <h4 class="font-bold text-slate-200 mb-1" id="readme-h1">🚀 Як запустити локально:</h4>
+                        <ol class="list-decimal list-inside space-y-1 text-slate-300">
+                            <li id="readme-step1">Збережіть цей файл під назвою <code class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300">index.html</code>.</li>
+                            <li id="readme-step2"><strong>Варіант 1:</strong> Просто двічі клацніть по файлу <code class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300">index.html</code>, щоб відкрити його у будь-якому веб-браузері (Chrome, Firefox, Safari, Edge).</li>
+                            <li id="readme-step3"><strong>Варіант 2 (через сервер):</strong> Якщо використовуєте VS Code, встановіть розширення <em>Live Server</em> і натисніть "Go Live". Або запустіть у терміналі: <code class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300">python -m http.server 8000</code>.</li>
+                        </ol>
+                    </div>
+
+                    <div>
+                        <h4 class="font-bold text-slate-200 mb-1" id="readme-h2">💡 Чи можна виграти з 1-ї спроби?</h4>
+                        <p id="readme-p1">
+                            Так! При 1-му виборі шанс відгадати автомобіть становить <strong>33.3% (1 з 3)</strong>. Якщо ви вгадали двері з 1-го разу і вирішите <strong>не змінювати</strong> свій вибір — ви виграєте авто! Зміна вибору дає <strong>66.7%</strong> шансів на виграш, оскільки ведучий усуває 1 козу.
+                        </p>
+                    </div>
+                </div>
+            </details>
+        </section>
+
+    </main>
+
+    <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
+        <p>Monty Hall Problem Interactive Web Simulator &copy; 2026</p>
+    </footer>
+
+    <script>
+        // --- Translations ---
+        const i18n = {
+            uk: {
+                subtitle: "Інтерактивна симуляція теорії ймовірностей",
+                step1Badge: "Крок 1 з 3",
+                step1Title: "Оберіть одні з трьох дверей!",
+                step1Desc: "За одними дверми ховається нове авто 🚗, а за двома іншими — кози 🐐.",
+                step2Badge: "Крок 2 з 3",
+                step2Title: "Ведучий відкриває двері з козою! 🐐",
+                step2Desc: "Ведучий показав козу за дверми #{revealed}. Бажаєте змінити свій вибір на двері #{other} чи залишити двері #{current}?",
+                step3WinTitle: "Вітаємо! Ви виграли Автомобіль! 🚗🎉",
+                step3LoseTitle: "На жаль, за дверми коза! 🐐",
+                step3WinDescKept: "Чудово! Ви вгадали авто з 1-го разу і залишили свій вибір!",
+                step3WinDescSwitched: "Чудово! Стратегія зміни дверей спрацювала і ви виграли авто!",
+                step3LoseDescKept: "Ви залишили початкові двері, але авто було за іншими. Спробуйте ще раз!",
+                step3LoseDescSwitched: "Ви змінили вибір, але авто було за вашими першими дверми!",
+                btnSwitch: "Змінити на двері #{num}",
+                btnKeep: "Залишити двері #{num}",
+                btnPlayAgain: "Грати знову",
+                doorLabel: "Двері",
+                goat: "Коза",
+                car: "Авто",
+                statsHeading: "Статистика та Аналітика",
+                btnAutoSim: "Автосимуляція (1000 ігор)",
+                statTitleSwitch: "Стратегія: Зміна Вибору",
+                statDescSwitch: "Гравець постійно змінює двері (~66.7% виграшу)",
+                statTitleKeep: "Стратегія: Без Зміни (1-й Вибір)",
+                statDescKeep: "Залишити початкові двері (~33.3% виграшу)",
+                lblGames: "Ігор:",
+                lblWins: "Виграшів:",
+                totalGames: "Всього проведено раундів:",
+                readmeTitle: "Інструкція з запуску та описом парадоксу (README)",
+                readmeH1: "🚀 Як запустити локально:",
+                readmeStep1: "Збережіть цей файл під назвою index.html.",
+                readmeStep2: "Варіант 1: Просто двічі клацніть по файлу index.html, щоб відкрити його у браузері.",
+                readmeStep3: "Варіант 2 (через сервер): Використовуйте Live Server у VS Code або виконайте python -m http.server 8000 у терміналі.",
+                readmeH2: "💡 Чи можна виграти з 1-ї спроби?",
+                readmeP1: "Так! При 1-му виборі шанс вгадати авто становить 33.3% (1 з 3). Якщо ви відгадали авто з першої спроби і вирішите НЕ змінювати вибір — ви виграєте!"
+            },
+            en: {
+                subtitle: "Interactive Probability Simulation",
+                step1Badge: "Step 1 of 3",
+                step1Title: "Pick one of the three doors!",
+                step1Desc: "Behind one door is a brand new Car 🚗, and behind two others are Goats 🐐.",
+                step2Badge: "Step 2 of 3",
+                step2Title: "The host reveals a goat! 🐐",
+                step2Desc: "The host opened door #{revealed} with a goat. Do you want to switch to door #{other} or stay with door #{current}?",
+                step3WinTitle: "Congratulations! You won a Car! 🚗🎉",
+                step3LoseTitle: "Bad luck, you got a goat! 🐐",
+                step3WinDescKept: "Awesome! You guessed right on your 1st pick and kept your choice!",
+                step3WinDescSwitched: "Great job! Switching doors paid off and you won the car!",
+                step3LoseDescKept: "You kept your initial pick, but the car was behind the other door.",
+                step3LoseDescSwitched: "You switched, but the car was actually behind your 1st pick!",
+                btnSwitch: "Switch to Door #{num}",
+                btnKeep: "Stay with Door #{num}",
+                btnPlayAgain: "Play Again",
+                doorLabel: "Door",
+                goat: "Goat",
+                car: "Car",
+                statsHeading: "Statistics & Analytics",
+                btnAutoSim: "Auto-Simulate (1,000 Games)",
+                statTitleSwitch: "Strategy: Switched Choice",
+                statDescSwitch: "Player always switched doors (~66.7% win rate)",
+                statTitleKeep: "Strategy: Kept Choice (1st Guess)",
+                statDescKeep: "Player kept initial choice (~33.3% win rate)",
+                lblGames: "Games:",
+                lblWins: "Wins:",
+                totalGames: "Total rounds played:",
+                readmeTitle: "Local Setup & Paradox Guide (README)",
+                readmeH1: "🚀 How to run locally:",
+                readmeStep1: "Save this file as index.html.",
+                readmeStep2: "Option 1: Simply double-click index.html to open it in your browser.",
+                readmeStep3: "Option 2 (HTTP Server): Use VS Code Live Server or run python -m http.server 8000 in your terminal.",
+                readmeH2: "💡 Is it possible to win on the 1st guess?",
+                readmeP1: "Yes! Your initial guess has a 33.3% chance of being the car. If you pick correctly on guess #1 and choose to STAY with your door, you WIN!"
+            }
+        };
+
+        // --- Game State ---
+        let currentLang = 'uk';
+        let gameState = {
+            step: 1, // 1: Pick initial door, 2: Switch/Stay decision, 3: Revealed result
+            carPosition: 0,
+            selectedDoor: null,
+            hostRevealedDoor: null,
+            finalDoor: null,
+            switched: false
+        };
+
+        // --- Persistent Stats State ---
+        let stats = {
+            switched: { games: 0, wins: 0 },
+            kept: { games: 0, wins: 0 }
+        };
+
+        window.onload = function() {
+            loadStats();
+            initGame();
+            updateUI();
+        };
+
+        function loadStats() {
+            const saved = localStorage.getItem('monty_hall_stats');
+            if (saved) {
+                try {
+                    stats = JSON.parse(saved);
+                } catch(e) { console.error('Failed to parse stats'); }
+            }
+            renderStats();
+        }
+
+        function saveStats() {
+            localStorage.setItem('monty_hall_stats', JSON.stringify(stats));
+            renderStats();
+        }
+
+        function resetStats() {
+            stats = {
+                switched: { games: 0, wins: 0 },
+                kept: { games: 0, wins: 0 }
+            };
+            saveStats();
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'uk' ? 'en' : 'uk';
+            document.getElementById('lang-label').innerText = currentLang === 'uk' ? 'English' : 'Українська';
+            updateUI();
+        }
+
+        function initGame() {
+            gameState.step = 1;
+            // 1. Randomly place the car behind one of the 3 doors (0, 1, or 2)
+            gameState.carPosition = Math.floor(Math.random() * 3);
+            gameState.selectedDoor = null;
+            gameState.hostRevealedDoor = null;
+            gameState.finalDoor = null;
+            gameState.switched = false;
+
+            // Reset Door Cards UI
+            for (let i = 0; i < 3; i++) {
+                const card = document.getElementById(`door-card-${i}`);
+                const doorEl = document.getElementById(`door-${i}`);
+                const prizeEl = document.getElementById(`door-prize-${i}`);
+                const labelEl = document.getElementById(`door-label-${i}`);
+
+                card.classList.remove('flipped');
+                doorEl.className = "cursor-pointer group flex flex-col items-center transition transform hover:-translate-y-1";
+
+                // Populate prizes behind closed doors
+                if (i === gameState.carPosition) {
+                    prizeEl.innerText = "🚗";
+                    labelEl.innerText = i18n[currentLang].car;
+                } else {
+                    prizeEl.innerText = "🐐";
+                    labelEl.innerText = i18n[currentLang].goat;
+                }
+            }
+
+            renderActionPanel();
+            updateUI();
+        }
+
+        function handleDoorClick(doorIndex) {
+            if (gameState.step === 1) {
+                selectInitialDoor(doorIndex);
+            } else if (gameState.step === 2 && doorIndex !== gameState.hostRevealedDoor) {
+                const isSwitch = doorIndex !== gameState.selectedDoor;
+                finalizeChoice(isSwitch);
+            }
+        }
+
+        function selectInitialDoor(doorIndex) {
+            gameState.selectedDoor = doorIndex;
+            gameState.step = 2;
+
+            // Host opens a door containing a GOAT that is NOT chosen by the player
+            let hostPossibleChoices = [];
+            for (let i = 0; i < 3; i++) {
+                if (i !== gameState.selectedDoor && i !== gameState.carPosition) {
+                    hostPossibleChoices.push(i);
+                }
+            }
+
+            // Pick one randomly from host choices (1 choice if user picked a goat, 2 choices if user picked the car)
+            gameState.hostRevealedDoor = hostPossibleChoices[Math.floor(Math.random() * hostPossibleChoices.length)];
+
+            // Reveal Host's door
+            const hostCard = document.getElementById(`door-card-${gameState.hostRevealedDoor}`);
+            hostCard.classList.add('flipped');
+
+            updateUI();
+            renderActionPanel();
+        }
+
+        function finalizeChoice(didSwitch) {
+            gameState.step = 3;
+            gameState.switched = didSwitch;
+
+            if (didSwitch) {
+                gameState.finalDoor = [0, 1, 2].find(i => i !== gameState.selectedDoor && i !== gameState.hostRevealedDoor);
+            } else {
+                gameState.finalDoor = gameState.selectedDoor;
+            }
+
+            // Reveal all doors
+            for (let i = 0; i < 3; i++) {
+                document.getElementById(`door-card-${i}`).classList.add('flipped');
+            }
+
+            // Record Stats
+            const isWin = (gameState.finalDoor === gameState.carPosition);
+            if (didSwitch) {
+                stats.switched.games++;
+                if (isWin) stats.switched.wins++;
+            } else {
+                stats.kept.games++;
+                if (isWin) stats.kept.wins++;
+            }
+
+            saveStats();
+            updateUI();
+            renderActionPanel();
+        }
+
+        function updateUI() {
+            const t = i18n[currentLang];
+
+            // Static translations
+            document.getElementById('sub-title').innerText = t.subtitle;
+            document.getElementById('stats-heading').innerText = t.statsHeading;
+            document.getElementById('btn-auto-sim').innerText = t.btnAutoSim;
+            document.getElementById('stat-title-switch').innerText = t.statTitleSwitch;
+            document.getElementById('stat-desc-switch').innerText = t.statDescSwitch;
+            document.getElementById('stat-title-keep').innerText = t.statTitleKeep;
+            document.getElementById('stat-desc-keep').innerText = t.statDescKeep;
+            document.getElementById('lbl-games-1').innerText = t.lblGames;
+            document.getElementById('lbl-games-2').innerText = t.lblGames;
+            document.getElementById('lbl-wins-1').innerText = t.lblWins;
+            document.getElementById('lbl-wins-2').innerText = t.lblWins;
+            document.getElementById('readme-title').innerText = t.readmeTitle;
+            document.getElementById('readme-h1').innerText = t.readmeH1;
+            document.getElementById('readme-step1').innerText = t.readmeStep1;
+            document.getElementById('readme-step2').innerText = t.readmeStep2;
+            document.getElementById('readme-step3').innerText = t.readmeStep3;
+            document.getElementById('readme-h2').innerText = t.readmeH2;
+            document.getElementById('readme-p1').innerText = t.readmeP1;
+
+            // Door labels
+            for (let i = 0; i < 3; i++) {
+                const label = document.getElementById(`door-label-${i}`);
+                label.innerText = (i === gameState.carPosition) ? t.car : t.goat;
+            }
+
+            // Door Highlights
+            for (let i = 0; i < 3; i++) {
+                const doorEl = document.getElementById(`door-${i}`);
+                doorEl.className = "cursor-pointer group flex flex-col items-center transition transform hover:-translate-y-1";
+
+                if (gameState.step >= 2 && i === gameState.selectedDoor) {
+                    doorEl.className += " door-selected p-1 rounded-2xl bg-blue-500/20";
+                }
+                if (gameState.step >= 2 && i === gameState.hostRevealedDoor) {
+                    doorEl.className += " door-host-revealed pointer-events-none opacity-60";
+                }
+            }
+
+            // Status Banner Updates
+            const badge = document.getElementById('step-badge');
+            const title = document.getElementById('status-title');
+            const desc = document.getElementById('status-desc');
+
+            if (gameState.step === 1) {
+                badge.innerText = t.step1Badge;
+                title.innerText = t.step1Title;
+                desc.innerText = t.step1Desc;
+            } else if (gameState.step === 2) {
+                const otherDoor = [0, 1, 2].find(i => i !== gameState.selectedDoor && i !== gameState.hostRevealedDoor);
+                badge.innerText = t.step2Badge;
+                title.innerText = t.step2Title;
+                desc.innerText = t.step2Desc
+                    .replace('{revealed}', gameState.hostRevealedDoor + 1)
+                    .replace('{other}', otherDoor + 1)
+                    .replace('{current}', gameState.selectedDoor + 1);
+            } else if (gameState.step === 3) {
+                const won = (gameState.finalDoor === gameState.carPosition);
+                badge.innerText = won ? "ПЕРЕМОГА / WIN" : "ПРОГРАШ / LOSS";
+                badge.className = won ? 
+                    "inline-block px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full text-xs font-bold uppercase tracking-wider mb-2 border border-emerald-500/30" :
+                    "inline-block px-3 py-1 bg-rose-500/20 text-rose-300 rounded-full text-xs font-bold uppercase tracking-wider mb-2 border border-rose-500/30";
+
+                title.innerText = won ? t.step3WinTitle : t.step3LoseTitle;
+
+                if (won) {
+                    desc.innerText = gameState.switched ? t.step3WinDescSwitched : t.step3WinDescKept;
+                } else {
+                    desc.innerText = gameState.switched ? t.step3LoseDescSwitched : t.step3LoseDescKept;
+                }
+            }
+        }
+
+        function renderActionPanel() {
+            const panel = document.getElementById('action-panel');
+            panel.innerHTML = '';
+            const t = i18n[currentLang];
+
+            if (gameState.step === 2) {
+                const otherDoor = [0, 1, 2].find(i => i !== gameState.selectedDoor && i !== gameState.hostRevealedDoor);
+
+                const btnSwitch = document.createElement('button');
+                btnSwitch.className = "px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg transition flex items-center gap-2 animate-pulse-subtle";
+                btnSwitch.innerHTML = `<i class="fa-solid fa-arrows-rotate"></i> ${t.btnSwitch.replace('{num}', otherDoor + 1)}`;
+                btnSwitch.onclick = () => finalizeChoice(true);
+
+                const btnKeep = document.createElement('button');
+                btnKeep.className = "px-5 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-200 font-semibold shadow-md transition flex items-center gap-2";
+                btnKeep.innerHTML = `<i class="fa-solid fa-shield-halved"></i> ${t.btnKeep.replace('{num}', gameState.selectedDoor + 1)}`;
+                btnKeep.onclick = () => finalizeChoice(false);
+
+                panel.appendChild(btnSwitch);
+                panel.appendChild(btnKeep);
+            } else if (gameState.step === 3) {
+                const btnRestart = document.createElement('button');
+                btnRestart.className = "px-6 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg transition flex items-center gap-2 text-base";
+                btnRestart.innerHTML = `<i class="fa-solid fa-rotate-right"></i> ${t.btnPlayAgain}`;
+                btnRestart.onclick = () => initGame();
+
+                panel.appendChild(btnRestart);
+            }
+        }
+
+        function renderStats() {
+            // Switched stats (~66.7% expected)
+            const swGames = stats.switched.games;
+            const swWins = stats.switched.wins;
+            const swRate = swGames > 0 ? ((swWins / swGames) * 100).toFixed(1) : "0.0";
+
+            document.getElementById('stat-games-switch').innerText = swGames;
+            document.getElementById('stat-wins-switch').innerText = swWins;
+            document.getElementById('stat-winrate-switch').innerText = `${swRate}%`;
+            document.getElementById('bar-switch').style.width = `${swRate}%`;
+
+            // Kept stats (~33.3% expected - winning on 1st guess)
+            const kpGames = stats.kept.games;
+            const kpWins = stats.kept.wins;
+            const kpRate = kpGames > 0 ? ((kpWins / kpGames) * 100).toFixed(1) : "0.0";
+
+            document.getElementById('stat-games-keep').innerText = kpGames;
+            document.getElementById('stat-wins-keep').innerText = kpWins;
+            document.getElementById('stat-winrate-keep').innerText = `${kpRate}%`;
+            document.getElementById('bar-keep').style.width = `${kpRate}%`;
+
+            // Total rounds
+            document.getElementById('total-games-count').innerText = swGames + kpGames;
+        }
+
+        function runAutoSimulation() {
+            // Run 500 games keeping 1st guess and 500 games switching choice
+            for (let i = 0; i < 500; i++) {
+                // Strategy 1: Always Switch
+                let carPos1 = Math.floor(Math.random() * 3);
+                let initialPick1 = Math.floor(Math.random() * 3);
+                let hostOpens1 = [0, 1, 2].find(d => d !== initialPick1 && d !== carPos1);
+                let switchedPick1 = [0, 1, 2].find(d => d !== initialPick1 && d !== hostOpens1);
+                
+                stats.switched.games++;
+                if (switchedPick1 === carPos1) stats.switched.wins++;
+
+                // Strategy 2: Always Keep (1st Guess)
+                let carPos2 = Math.floor(Math.random() * 3);
+                let initialPick2 = Math.floor(Math.random() * 3);
+                
+                stats.kept.games++;
+                if (initialPick2 === carPos2) stats.kept.wins++; // Wins if 1st guess was correct!
+            }
+
+            saveStats();
+        }
+    </script>
+</body>
+</html>
