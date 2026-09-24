@@ -190,8 +190,9 @@
                         <i class="fa-solid fa-bolt"></i>
                         <span id="btn-auto-sim">Автосимуляція (1000 ігор)</span>
                     </button>
-                    <button onclick="resetStats()" class="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-semibold rounded-lg transition" title="Скинути статистику">
+                    <button id="btn-reset-stats" onclick="resetStats()" class="px-2.5 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 text-xs font-semibold rounded-lg transition flex items-center gap-2" title="Скинути статистику">
                         <i class="fa-solid fa-rotate-left"></i>
+                        <span id="btn-reset-stats-label">Скинути статистику</span>
                     </button>
                 </div>
             </div>
@@ -256,40 +257,10 @@
             </div>
         </section>
 
-        <section class="bg-slate-950 border border-slate-800 rounded-2xl p-5 text-sm text-slate-400">
-            <details class="group">
-                <summary class="font-semibold text-slate-300 cursor-pointer flex items-center justify-between list-none">
-                    <span class="flex items-center gap-2">
-                        <i class="fa-solid fa-book-open text-indigo-400"></i>
-                        <span id="readme-title">Інструкція з запуску та описом парадоксу (README)</span>
-                    </span>
-                    <i class="fa-solid fa-chevron-down group-open:rotate-180 transition-transform"></i>
-                </summary>
-                
-                <div class="mt-4 pt-4 border-t border-slate-800 space-y-4 text-xs sm:text-sm leading-relaxed">
-                    <div>
-                        <h4 class="font-bold text-slate-200 mb-1" id="readme-h1">🚀 Як запустити локально:</h4>
-                        <ol class="list-decimal list-inside space-y-1 text-slate-300">
-                            <li id="readme-step1">Збережіть цей файл під назвою <code class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300">index.html</code>.</li>
-                            <li id="readme-step2"><strong>Варіант 1:</strong> Просто двічі клацніть по файлу <code class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300">index.html</code>, щоб відкрити його у будь-якому веб-браузері (Chrome, Firefox, Safari, Edge).</li>
-                            <li id="readme-step3"><strong>Варіант 2 (через сервер):</strong> Якщо використовуєте VS Code, встановіть розширення <em>Live Server</em> і натисніть "Go Live". Або запустіть у терміналі: <code class="bg-slate-800 px-1.5 py-0.5 rounded text-indigo-300">python -m http.server 8000</code>.</li>
-                        </ol>
-                    </div>
-
-                    <div>
-                        <h4 class="font-bold text-slate-200 mb-1" id="readme-h2">💡 Чи можна виграти з 1-ї спроби?</h4>
-                        <p id="readme-p1">
-                            Так! При 1-му виборі шанс відгадати автомобіть становить <strong>33.3% (1 з 3)</strong>. Якщо ви вгадали двері з 1-го разу і вирішите <strong>не змінювати</strong> свій вибір — ви виграєте авто! Зміна вибору дає <strong>66.7%</strong> шансів на виграш, оскільки ведучий усуває 1 козу.
-                        </p>
-                    </div>
-                </div>
-            </details>
-        </section>
-
     </main>
 
     <footer class="border-t border-slate-800 py-4 text-center text-xs text-slate-500">
-        <p>Monty Hall Problem Interactive Web Simulator &copy; 2026</p>
+        <p>Monty Hall Problem Interactive Web Simulator &copy; 2026 by unite</p>
     </footer>
 
     <script>
@@ -317,20 +288,14 @@
                 car: "Авто",
                 statsHeading: "Статистика та Аналітика",
                 btnAutoSim: "Автосимуляція (1000 ігор)",
+                btnResetStats: "Скинути статистику",
                 statTitleSwitch: "Стратегія: Зміна Вибору",
                 statDescSwitch: "Гравець постійно змінює двері (~66.7% виграшу)",
                 statTitleKeep: "Стратегія: Без Зміни (1-й Вибір)",
                 statDescKeep: "Залишити початкові двері (~33.3% виграшу)",
                 lblGames: "Ігор:",
                 lblWins: "Виграшів:",
-                totalGames: "Всього проведено раундів:",
-                readmeTitle: "Інструкція з запуску та описом парадоксу (README)",
-                readmeH1: "🚀 Як запустити локально:",
-                readmeStep1: "Збережіть цей файл під назвою index.html.",
-                readmeStep2: "Варіант 1: Просто двічі клацніть по файлу index.html, щоб відкрити його у браузері.",
-                readmeStep3: "Варіант 2 (через сервер): Використовуйте Live Server у VS Code або виконайте python -m http.server 8000 у терміналі.",
-                readmeH2: "💡 Чи можна виграти з 1-ї спроби?",
-                readmeP1: "Так! При 1-му виборі шанс вгадати авто становить 33.3% (1 з 3). Якщо ви відгадали авто з першої спроби і вирішите НЕ змінювати вибір — ви виграєте!"
+                totalGames: "Всього проведено раундів:"
             },
             en: {
                 subtitle: "Interactive Probability Simulation",
@@ -354,20 +319,14 @@
                 car: "Car",
                 statsHeading: "Statistics & Analytics",
                 btnAutoSim: "Auto-Simulate (1,000 Games)",
+                btnResetStats: "Reset Statistics",
                 statTitleSwitch: "Strategy: Switched Choice",
                 statDescSwitch: "Player always switched doors (~66.7% win rate)",
                 statTitleKeep: "Strategy: Kept Choice (1st Guess)",
                 statDescKeep: "Player kept initial choice (~33.3% win rate)",
                 lblGames: "Games:",
                 lblWins: "Wins:",
-                totalGames: "Total rounds played:",
-                readmeTitle: "Local Setup & Paradox Guide (README)",
-                readmeH1: "🚀 How to run locally:",
-                readmeStep1: "Save this file as index.html.",
-                readmeStep2: "Option 1: Simply double-click index.html to open it in your browser.",
-                readmeStep3: "Option 2 (HTTP Server): Use VS Code Live Server or run python -m http.server 8000 in your terminal.",
-                readmeH2: "💡 Is it possible to win on the 1st guess?",
-                readmeP1: "Yes! Your initial guess has a 33.3% chance of being the car. If you pick correctly on guess #1 and choose to STAY with your door, you WIN!"
+                totalGames: "Total rounds played:"
             }
         };
 
@@ -525,6 +484,8 @@
             document.getElementById('sub-title').innerText = t.subtitle;
             document.getElementById('stats-heading').innerText = t.statsHeading;
             document.getElementById('btn-auto-sim').innerText = t.btnAutoSim;
+            document.getElementById('btn-reset-stats-label').innerText = t.btnResetStats;
+            document.getElementById('btn-reset-stats').title = t.btnResetStats;
             document.getElementById('stat-title-switch').innerText = t.statTitleSwitch;
             document.getElementById('stat-desc-switch').innerText = t.statDescSwitch;
             document.getElementById('stat-title-keep').innerText = t.statTitleKeep;
@@ -533,13 +494,6 @@
             document.getElementById('lbl-games-2').innerText = t.lblGames;
             document.getElementById('lbl-wins-1').innerText = t.lblWins;
             document.getElementById('lbl-wins-2').innerText = t.lblWins;
-            document.getElementById('readme-title').innerText = t.readmeTitle;
-            document.getElementById('readme-h1').innerText = t.readmeH1;
-            document.getElementById('readme-step1').innerText = t.readmeStep1;
-            document.getElementById('readme-step2').innerText = t.readmeStep2;
-            document.getElementById('readme-step3').innerText = t.readmeStep3;
-            document.getElementById('readme-h2').innerText = t.readmeH2;
-            document.getElementById('readme-p1').innerText = t.readmeP1;
 
             // Door labels
             for (let i = 0; i < 3; i++) {
